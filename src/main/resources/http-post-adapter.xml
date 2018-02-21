@@ -1,0 +1,45 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:int-http="http://www.springframework.org/schema/integration/http"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/integration
+    http://www.springframework.org/schema/integration/spring-integration.xsd
+    http://www.springframework.org/schema/integration/http
+    http://www.springframework.org/schema/integration/http/spring-integration-http.xsd">
+    <context:component-scan base-package="dean" />
+
+    <int:management default-logging-enabled="false"
+                    default-counts-enabled="true"
+                    default-stats-enabled="true"
+                    counts-enabled-patterns="message*, preprocess*, send*"
+                    stats-enabled-patterns="message*, preprocess*, send*"/>
+
+    <int-http:inbound-channel-adapter
+            channel="httpPostChannel"
+            status-code-expression="T(org.springframework.http.HttpStatus).NO_CONTENT"
+            supported-methods="POST"
+            path="/customer"
+            request-payload-type="dean.customerservice.Customer[]">
+        <int-http:request-mapping consumes="application/json" />
+    </int-http:inbound-channel-adapter>
+
+
+    <int:channel id="httpPostChannel" />
+
+    <int:splitter id="postSplitter"
+                  input-channel="httpPostChannel"
+                  output-channel="splitPostChannel"
+                  ref="messageSplitter"/>
+
+    <int:channel id="splitPostChannel"/>
+
+    <int:service-activator ref="inboundEndpoint"
+                           method="post"
+                           input-channel="splitPostChannel" />
+
+</beans>

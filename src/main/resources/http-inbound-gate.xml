@@ -1,0 +1,42 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:int-http="http://www.springframework.org/schema/integration/http"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/integration
+    http://www.springframework.org/schema/integration/spring-integration.xsd
+    http://www.springframework.org/schema/integration/http
+    http://www.springframework.org/schema/integration/http/spring-integration-http.xsd">
+
+    <context:component-scan base-package="dean" />
+
+    <int:management default-logging-enabled="false"
+                    default-counts-enabled="true"
+                    default-stats-enabled="true"
+                    counts-enabled-patterns="message*, preprocess*, send*"
+                    stats-enabled-patterns="message*, preprocess*, send*"/>
+
+
+    <int:channel id="outputChannel" />
+
+    <int-http:inbound-gateway id="inboundWsGate"
+                              request-channel="requestChannel"
+                              reply-channel="outputChannel"
+                              supported-methods="GET"
+                              path="/getall">
+        <int-http:request-mapping consumes="application/json"
+                                  produces="application/json"/>
+    </int-http:inbound-gateway>
+
+    <int:channel id="requestChannel" />
+
+    <int:service-activator ref="inboundEndpoint"
+                           method="get"
+                           input-channel="requestChannel"
+                           output-channel="outputChannel" />
+
+</beans>
